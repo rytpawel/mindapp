@@ -1,0 +1,27 @@
+.MindmapBuilder {
+	position: relative;
+}
+.DiagramComponent {
+	width: 100%;
+	height: calc(100vh - 140px);
+	border: solid 1px black;
+	background-color: white;
+}
+.ContextMenu {
+	position: absolute;
+	display: none;
+	background-color: #fafafa;
+	padding: 3px 0px;
+	border: 1px solid #333;
+	z-index: 999;
+}
+.ContextMenu ul {
+	list-style: none;
+	padding:0px;
+	margin:0px;
+	display: flex;
+	flex-wrap: wrap;
+}
+.ContextMenu ul li {
+	padding: 0px 3px
+}
