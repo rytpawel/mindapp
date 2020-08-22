@@ -55,39 +55,62 @@ const InitialState = {
 }
 
 
-
+let currentMapObject = {};
 let map_title = 'Untitled';
-
+let new_text = '';
 class MindMapBuilder extends Component {
 
 		state = {
-			contextIsOpen: false
+			contextIsOpen: false,
+			nodeDataArray : [{ }],
+			linkDataArray : [{ }],
 		}
 		
 		constructor(props) {
 			super(props);			
+			if( this.props.currentMapId === undefined || this.props.currentMapId == '' || this.props.allMaps[this.props.currentMapId].map.nodeDataArray === undefined) {
+				this.props.history.push('/my-projects');
+			}
 		}
+		
+	// ================================================================== //
+	// ======================== UPDATE FIRESTORE ======================== //
+	// ================================================================== //
+	
+	handleSaveMap = async () => {
 
+		const currentMap = diagram.model.toJson();
+		const currentMapObject = JSON.parse(currentMap);
+		if(currentMapObject !== undefined) {
+			if( this.props.isLogged && this.props.userData.user_uid) {
+					const entriesRef = firestore.collection('users')
+						.doc(this.props.userData.user_uid)
+						.collection('maps').doc(this.props.currentMapId[0]).update({"map" : currentMapObject});
+				
+				console.log(this.props.allMaps[this.props.currentMapId].map);
+			}		
+		}
+	}    
+
+	// ================================================================== //
+	// ======================== END OF FIRESTORE ======================== //
+	// ================================================================== //
 		componentDidUpdate = () => {
+			console.log("componentDidUpdate");
 
-			if( this.props.currentMapId === undefined || this.props.currentMapId == '') {
+			if( this.props.currentMapId === undefined || this.props.currentMapId == '' || this.props.allMaps[this.props.currentMapId].map === undefined) {
 				this.props.history.push('/my-projects');
 			} else {
-				if( nodeDataArray != this.props.allMaps[this.props.currentMapId].map.nodeDataArray) {
 					nodeDataArray = this.props.allMaps[this.props.currentMapId].map.nodeDataArray;
-				}
-				if( linkDataArray != this.props.allMaps[this.props.currentMapId].map.linkDataArray) {
 					linkDataArray = this.props.allMaps[this.props.currentMapId].map.linkDataArray;
-				}
-
-				map_title =  this.props.allMaps[this.props.currentMapId].name ?  this.props.allMaps[this.props.currentMapId].name : "untitled" ;
+					map_title =  this.props.allMaps[this.props.currentMapId].name ?  this.props.allMaps[this.props.currentMapId].name : "untitled" ;
 			}
 
 		}
 		
 		componentWillUnmount = () => {
 			// this.saveToLocalStorage();
-			this.handleSaveMap();
+			//this.handleSaveMap();
 		}
 
 		// saveToLocalStorage = () => {
@@ -99,7 +122,7 @@ class MindMapBuilder extends Component {
 				...this.state,
 				contextIsOpen: false
 			})
-			if( this.props.currentMapId === undefined || this.props.currentMapId == '') {
+			if( this.props.currentMapId === undefined || this.props.currentMapId == '' || this.props.allMaps[this.props.currentMapId].map.nodeDataArray === undefined) {
 				this.props.history.push('/my-projects');
 			} else {
 				nodeDataArray = this.props.allMaps[this.props.currentMapId].map.nodeDataArray;
@@ -193,6 +216,7 @@ class MindMapBuilder extends Component {
 		deleteSelectionNode = () => {
 			diagram.commandHandler.deleteSelection();
 			diagram.currentTool.stopTool();
+			this.handleSaveMap();
 		}
 		pasteSelectionNode = () => {
 			diagram.commandHandler.pasteSelection();
@@ -306,9 +330,10 @@ class MindMapBuilder extends Component {
 		
 			diagram.addDiagramListener("ObjectSingleClicked", this.handleStickyContextmenu);
 			diagram.addDiagramListener("BackgroundSingleClicked", this.handleStickyContextmenuBackgroundSingleClicked);
-			diagram.addModelChangedListener(function(evt) {
+			diagram.addModelChangedListener( (evt) => {
 				if (evt.isTransactionFinished) {
 					console.log("ZAPISZ?");
+					//this.handleSaveMap();
 				}
 			});
 
@@ -319,7 +344,7 @@ class MindMapBuilder extends Component {
     handleModelChange = (changes) => {
 
 		const currentMap = diagram.model.toJson();
-		const currentMapObject = JSON.parse(currentMap);
+		currentMapObject = JSON.parse(currentMap);
 
 		if ( changes.insertedNodeKeys !== undefined  || 
 				changes.insertLinkKeys !== undefined ) {
@@ -343,21 +368,31 @@ class MindMapBuilder extends Component {
 
 
 	changeTextHandler = (value) => {
-
-		var model = diagram.model;
-		var data = model.findNodeDataForKey(currentSelectedNode.key);
-		if (data) {
-			model.startTransaction("modified property");
-			model.set(data, "text", value);
-			// ... maybe modify other properties and/or other data objects
-			model.commitTransaction("modified property");
-		}
+		new_text = value;
+		console.log(new_text);
+		// var model = diagram.model;
+		// var data = model.findNodeDataForKey(currentSelectedNode.key);
+		// if (data) {
+		// 	model.startTransaction("modified property");
+		// 	model.set(data, "text", value);
+		// 	// ... maybe modify other properties and/or other data objects
+		// 	model.commitTransaction("modified property");
+		// }
 
 	}
 	saveEvent = (event) => {
 		this.setState({
 			edit_window: false
 		  });
+		var model = diagram.model;
+		var data = model.findNodeDataForKey(currentSelectedNode.key);
+		if (data) {
+			model.startTransaction("modified property");
+			model.set(data, "text", new_text);
+			// ... maybe modify other properties and/or other data objects
+			model.commitTransaction("modified property");
+			this.handleSaveMap();
+		}
 
 	}
 	handleDiagramEvent = (e) => {
@@ -365,27 +400,7 @@ class MindMapBuilder extends Component {
 	}
 
 
-	// ================================================================== //
-	// ======================== UPDATE FIRESTORE ======================== //
-	// ================================================================== //
 	
-	handleSaveMap = async () => {
-
-		const currentMap = diagram.model.toJson();
-		const currentMapObject = JSON.parse(currentMap);
-		
-		if(currentMapObject !== undefined) {
-			if( this.props.isLogged && this.props.userData.user_uid) {
-				const entriesRef = firestore.collection('users')
-					.doc(this.props.userData.user_uid)
-					.collection('maps').doc(this.props.currentMapId[0]).update({"map" : currentMapObject});
-			}		
-		}
-	}    
-
-	// ================================================================== //
-	// ======================== END OF FIRESTORE ======================== //
-	// ================================================================== //
 	
 
     render() {
@@ -412,8 +427,8 @@ class MindMapBuilder extends Component {
                 <ReactDiagram
                     initDiagram={this.initDiagram}
                     divClassName={classes.DiagramComponent}
-                    nodeDataArray={nodeDataArray}
-                    linkDataArray={linkDataArray}
+                    nodeDataArray={this.props.allMaps[this.props.currentMapId].map.nodeDataArray}
+                    linkDataArray={this.props.allMaps[this.props.currentMapId].map.linkDataArray}
                     onModelChange={this.handleModelChange}
                     />
 					<IonFab activated={this.state.contextIsOpen}  vertical="bottom" horizontal="end" slot="fixed">
