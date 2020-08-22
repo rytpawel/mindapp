@@ -1,0 +1,28 @@
+.MenuProfile {
+    position: fixed;
+    right: 10px;
+    top: 10px;
+    background-color: #067ca7;
+    padding: 4px 4px 4px 15px;
+    color:white;
+    display: flex;
+    flex-wrap: nowrap;
+    align-content: center;
+    align-items: center;
+    border-radius: 20px;
+    box-shadow: 4px 8px 10px rgba(0,0,0,0.15);
+    box-sizing: border-box;
+    cursor: pointer;
+    z-index: 90;
+    
+}
+.MenuProfile span {
+    margin-right: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+.MenuProfile img {
+    width: 30px;
+    border-radius: 100%;
+}

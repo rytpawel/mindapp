@@ -1,0 +1,29 @@
+.StickyButtonCircle {
+    box-sizing: border-box;
+    background-color: transparent;
+   
+    border-radius: 100%;
+    border: 1px solid #fafafa;
+    background-color: white;
+    box-shadow: 10px 10px 10px rgba(0,0,0,0.15);
+    outline: none!important;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    align-content: center;
+    position: relative;
+    text-align: center;
+    padding: 10px;
+    height: auto;
+
+
+}
+.StickyButtonCircle svg {
+    width: 10px!important;
+    height: 10px!important;
+}
+li.Add svg {
+    color: green;
+    width: 20px!important;
+    height: 20px!important;
+}

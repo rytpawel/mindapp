@@ -1,0 +1,31 @@
+.Editor {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	display: none;
+	align-items: center;
+	z-index: 90;
+	box-sizing: border-box;
+
+	
+}
+.Editor form{
+	box-sizing: border-box;
+	width: 600px;
+	height: auto;
+	background: white;
+	box-shadow: 5px 5px 10px rgba(0,0,0,0.15);
+	margin: auto;
+	padding: 25px;
+}
+.Editor input,
+.Editor textarea {
+	box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+}

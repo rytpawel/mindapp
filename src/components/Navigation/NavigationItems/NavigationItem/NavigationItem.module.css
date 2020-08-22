@@ -1,11 +1,3 @@
-.NavigationItem {
-    width: fit-content;
-}
 .NavigationItem a {
-    color:white;
     text-decoration: none;
-    padding: 10px 10px;
-    letter-spacing: 0.3px;
-    height: auto;
-    display: flex;
 }

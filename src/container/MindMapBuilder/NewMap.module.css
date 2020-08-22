@@ -1,0 +1,30 @@
+.Content {
+    align-content: center;
+    display: flex;
+    max-width: 400px;
+    margin: auto;
+    flex-wrap: wrap;
+    text-align: center;
+    align-content: center;
+    align-items: center;
+    height: 100%;
+}
+.Content p,
+.Content h3 {
+    text-align: center;
+    width: 100%;
+    color:#787878;
+    font-size: 18px;
+}
+.Content p {
+    color:#727272;
+    margin-top:0px;
+    font-size: 14px;
+}
+.Content ion-button {
+    margin: auto;
+}
+
+.BtnClose {
+    font-weight: 600;
+}

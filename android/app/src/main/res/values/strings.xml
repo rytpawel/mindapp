@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mindapp</string>
+    <string name="title_activity_main">Mindapp</string>
+    <string name="package_name">pl.mind_app.mindapp</string>
+    <string name="custom_url_scheme">pl.mind_app.mindapp</string>
+    <string name="server_client_id">893332777761-1qrkrhf9rabv0084fnlupjkeet2isahr.apps.googleusercontent.com</string>
+</resources>

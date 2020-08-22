@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "574832262224",
+    "firebase_url": "https://mindapp-76c92.firebaseio.com",
+    "project_id": "mindapp-76c92",
+    "storage_bucket": "mindapp-76c92.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:574832262224:android:1c7b79e6c172baaa65e555",
+        "android_client_info": {
+          "package_name": "pl.mind_app.mindapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "574832262224-tbi9mjg8ri3s28o50iho4pap4fuegklk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "pl.mind_app.mindapp",
+            "certificate_hash": "42dfc466857f5a569ce088b06fef1d7750c304f4"
+          }
+        },
+        {
+          "client_id": "574832262224-8hp2k4f6cqqpm7qmelmrba619mg5ac0k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlb0ZzWNncKPiZVYDHGV8wVV90KNBI858"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "574832262224-8hp2k4f6cqqpm7qmelmrba619mg5ac0k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

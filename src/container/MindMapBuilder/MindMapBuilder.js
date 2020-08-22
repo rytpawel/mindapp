@@ -3,221 +3,410 @@ import React, { Component } from 'react';
 import * as go from 'gojs';
 import { ReactDiagram } from 'gojs-react';
 
-// Components
+import {connect} from 'react-redux';
+import * as actionTypes from '../../store/actions';
+
+
+import { addOutline, trash, gitMerge, grid,text,copy } from 'ionicons/icons';
+
 import Wrap from '../../components/hoc/Wrap';
+import Editor from '../../components/Editor/Editor';
 
 
-//Styles
 import classes from './MindMapBuilder.module.css';
+import {
+    IonContent,
+    IonPage,
+    IonTitle,
+    IonToolbar,
+    IonButton,
+    IonList,
+    IonItem,
+    IonInput,
+    IonLabel,
+    IonText,
+    IonToast,
+    IonLoading,
+    IonItemDivider,
+    IonItemGroup,
+    IonFab, IonFabButton, IonIcon, IonFabList,
+    IonAvatar,IonHeader,IonButtons,IonMenuButton,IonModal,IonTextarea,IonCard,IonCardContent,IonCardHeader,IonItemSliding,IonItemOptions,IonItemOption, IonListHeader
 
+} from '@ionic/react';
+import { firestore } from './../../firebase';
+
+// core
 let diagram = null;
+let nodeDataArray = [{ }];
+let linkDataArray =  [{ }];
+
+let currentSelectedNode = null;
+let currentSelectedID = null;
+
+
+let multipleSelectedID = null;
+let newNode = null;
+
+
+const InitialState = {
+	edit_window: false,
+	multipleSelectedHandle : false,
+	currentMapModel : 0,
+}
+
+
+
+let map_title = 'Untitled';
 
 class MindMapBuilder extends Component {
 
-	
-	hideContextMenu = () => {
-		let contextMenuDiv = document.getElementById("contextMenu");
-		contextMenuDiv.style.display = "none";
-	}
-
-	hideCX = (myDiagram) => {
-        if (myDiagram.currentTool instanceof go.ContextMenuTool) {
-          myDiagram.currentTool.doCancel();
-        }
-	}
-	maybeShowItem = (elt, pred, hasMenuItem) => {
-		if (pred) {
-		  elt.style.display = "block";
-		  hasMenuItem = true;
-		} else {
-		  elt.style.display = "none";
+		state = {
+			contextIsOpen: false
 		}
-	}
-	showContextMenu = (obj, diagram, tool) => {
-		var cmd = diagram.commandHandler;
-		var hasMenuItem = false;
-		let contextMenuDiv = document.getElementById("contextMenu");
-
-		contextMenuDiv.style.display = "block";
-		contextMenuDiv.classList.add("show-menu");
 		
-		this.maybeShowItem(document.getElementById("remove"), cmd.canDeleteSelection(),hasMenuItem);
-		this.maybeShowItem(document.getElementById("paste"), cmd.canPasteSelection(),hasMenuItem);
-		this.maybeShowItem(document.getElementById("copy"), cmd.canCopySelection(),hasMenuItem);
+		constructor(props) {
+			super(props);			
+		}
 
-		var mousePt = diagram.lastInput.viewPoint;
-		contextMenuDiv.style.left = mousePt.x - 40 + "px";
-		contextMenuDiv.style.top = mousePt.y - 30 + "px";
-	}
+		componentDidUpdate = () => {
 
+			if( this.props.currentMapId === undefined || this.props.currentMapId == '') {
+				this.props.history.push('/my-projects');
+			} else {
+				if( nodeDataArray != this.props.allMaps[this.props.currentMapId].map.nodeDataArray) {
+					nodeDataArray = this.props.allMaps[this.props.currentMapId].map.nodeDataArray;
+				}
+				if( linkDataArray != this.props.allMaps[this.props.currentMapId].map.linkDataArray) {
+					linkDataArray = this.props.allMaps[this.props.currentMapId].map.linkDataArray;
+				}
 
+				map_title =  this.props.allMaps[this.props.currentMapId].name ?  this.props.allMaps[this.props.currentMapId].name : "untitled" ;
+			}
 
-	deleteSelectionNode = () => {
-		diagram.commandHandler.deleteSelection();
-	 	diagram.currentTool.stopTool();
-	}
-	pasteSelectionNode = () => {
-		diagram.commandHandler.pasteSelection();
-	 	diagram.currentTool.stopTool();
-	}
-	copySelectionNode = () => {
-		diagram.commandHandler.copySelection();
-	 	diagram.currentTool.stopTool();
-	}
-	addNode = () => {
-		diagram.startTransaction("make new node");
-  		diagram.model.addNodeData({ key: "Omega" });
-		diagram.commitTransaction("make new node");
+		}
 		
-		diagram.currentTool.stopTool();
+		componentWillUnmount = () => {
+			// this.saveToLocalStorage();
+			this.handleSaveMap();
+		}
 
-	}
+		// saveToLocalStorage = () => {
+		// 	localStorage.setItem('appState', JSON.stringify(this.state));
+		// }
 
-	addNodeAndLink = (e, b) => {
-		// take a button panel in an Adornment, get its Adornment, and then get its adorned Node
-		var node = b.part.adornedPart;
-		// we are modifying the model, so conduct a transaction
-		var diagram = node.diagram;
-		diagram.startTransaction("add node and link");
-		// have the Model add the node data
-		var newnode = { key: "N" };
-		diagram.model.addNodeData(newnode);
-		// locate the node initially where the parent node is
-		diagram.findNodeForData(newnode).location = node.location;
-		// and then add a link data connecting the original node with the new one
-		var newlink = { from: node.data.key, to: newnode.key };
-		diagram.model.addLinkData(newlink);
-		// finish the transaction -- will automatically perform a layout
-		diagram.commitTransaction("add node and link");
-	  }
+		componentDidMount = () => {
+			this.setState({
+				...this.state,
+				contextIsOpen: false
+			})
+			if( this.props.currentMapId === undefined || this.props.currentMapId == '') {
+				this.props.history.push('/my-projects');
+			} else {
+				nodeDataArray = this.props.allMaps[this.props.currentMapId].map.nodeDataArray;
+				linkDataArray = this.props.allMaps[this.props.currentMapId].map.linkDataArray;
+				map_title =  this.props.allMaps[this.props.currentMapId].name ?  this.props.allMaps[this.props.currentMapId].name : "untitled" ;
+			}
+		}
+
+
+
 	
-    initDiagram = () => {
+		
+		handleStickyContextmenu = (data) => {
+
+			var part = data.subject.part;
+			currentSelectedNode = part.data;
+
+			this.showContextMenu (part, diagram);
+
+			if( multipleSelectedID!=null) {
+				this.joinSelectionNode();
+			}
+		}
+
+		handleStickyContextmenuBackgroundSingleClicked = (data) => {
+			this.hideContextMenu();
+		}
+
+		hideContextMenu = () => {
+			if(this.state.contextIsOpen) {
+				this.setState({
+					...this.state,
+					contextIsOpen: false
+				})
+			}
+		}
+
+		maybeShowItem = (elt, pred) => {
+			if (pred) {
+			elt.style.display = "flex";
+			} else {
+			elt.style.display = "none";
+			}
+		}
+		showContextMenu = (obj, diagram, tool) => {
+			
+			if(obj) {
+				
+				currentSelectedNode = obj.data;
+				currentSelectedID = obj.key;
+			}
+			var cmd = diagram.commandHandler;
+			
+			// let contextMenuDiv = document.getElementById("contextMenu");
+
+			// contextMenuDiv.style.display = "flex";
+			// contextMenuDiv.classList.add("show-menu");
+			if(!this.state.contextIsOpen) {
+				this.setState({
+					...this.state,
+					contextIsOpen: true
+				})
+			}
+			
+			// this.maybeShowItem(document.getElementById("remove"), cmd.canDeleteSelection());
+			// this.maybeShowItem(document.getElementById("paste"), cmd.canPasteSelection());
+			// this.maybeShowItem(document.getElementById("copy"), cmd.canCopySelection());
+			// this.maybeShowItem(document.getElementById("add"), cmd.canCopySelection());
+
+
+				
+		}
+		editSelectionNode = () => {
+
+			diagram.currentTool.stopTool();
+
+
+			if ( newNode != null ) {
+				currentSelectedNode = newNode.data;
+				currentSelectedID = newNode.data.key;
+				this.setState({
+					edit_window: true
+				  });
+			} else if( currentSelectedNode != null) { 
+				
+				this.setState({
+					edit_window: true
+				  });
+			}
+		}
+		deleteSelectionNode = () => {
+			diagram.commandHandler.deleteSelection();
+			diagram.currentTool.stopTool();
+		}
+		pasteSelectionNode = () => {
+			diagram.commandHandler.pasteSelection();
+			diagram.currentTool.stopTool();
+		}
+		copySelectionNode = () => {
+			diagram.commandHandler.copySelection();
+			diagram.currentTool.stopTool();
+		}
+		joinSelectionNode = () => {
+			
+			if( multipleSelectedID == null && currentSelectedID != null) {
+				multipleSelectedID = currentSelectedID;
+				return 0
+			} else if(  multipleSelectedID != null && currentSelectedID != null ) {
+				diagram.startTransaction("add node and link");
+				var newlink = { from: multipleSelectedID, to: currentSelectedID };
+				diagram.model.addLinkData(newlink);
+				diagram.commitTransaction("add node and link");
+				multipleSelectedID = null;
+			}
+			
+		}
+
+		addNodeAndLink = (e, b) => {
+			if( currentSelectedID != null) {		
+				diagram.startTransaction("add node and link");
+				// have the Model add the node data
+				var newnode = { key: diagram.model.nodeDataArray.length };
+				
+				diagram.model.addNodeData(newnode);
+				// locate the node initially where the parent node is
+				// diagram.findNodeForData(newnode).location = node.location;
+				// and then add a link data connecting the original node with the new one
+				var newlink = { from: currentSelectedID, to: newnode.key };
+				diagram.model.addLinkData(newlink);
+				// finish the transaction -- will automatically perform a layout
+				diagram.commitTransaction("add node and link");
+			}
+			diagram.currentTool.stopTool();
+		}
+		
+	// End Context Menu Functions
+
+	
+    	initDiagram = () => {
+		
+
+		window.addEventListener('beforeunload', (event) => {
+			// Cancel the event as stated by the standard.
+			event.preventDefault();
+			// Chrome requires returnValue to be set.
+			event.returnValue = '';
+			// this.saveToLocalStorage();
+		});
+		  
 	
         const $ = go.GraphObject.make;
 		// set your license key here before creating the diagram: go.Diagram.licenseKey = "...";
-		let contextMenuDiv = document.getElementById("contextMenu");
+		//let contextMenuDiv = document.getElementById("contextMenu");
 		let myContextMenu = $(go.HTMLInfo, {
 			show: this.showContextMenu,
 			hide: this.hideContextMenu
-		  });
+		});
 
 
         diagram =
           $(go.Diagram,
             {
-              'undoManager.isEnabled': true,  // must be set to allow for model change listening
-              // 'undoManager.maxHistoryLength': 0,  // uncomment disable undo/redo functionality
+              'undoManager.isEnabled': true,  
               'clickCreatingTool.archetypeNodeData': { text: 'new node', color: 'lightblue' },
-              model: $(go.GraphLinksModel,
-                {
-                  linkKeyProperty: 'key'  // IMPORTANT! must be defined for merges and data sync when using GraphLinksModel
+            	model: $(go.GraphLinksModel, {
+                	linkKeyProperty: 'key'  
                 })
 			});
 			
-		diagram.contextMenu = myContextMenu;
+			diagram.contextMenu = myContextMenu;
 		
-		contextMenuDiv.addEventListener("contextmenu", function(e) {
-			e.preventDefault();
-			return false;
-		  }, false);
-
-        // define a simple Node template
-        diagram.nodeTemplate =
-		  $(go.Node, 'Auto', 
-		  { contextMenu: myContextMenu },
-		   // the Shape will go around the TextBlock
-            new go.Binding('location', 'loc', go.Point.parse).makeTwoWay(go.Point.stringify),
-            $(go.Shape, 'RoundedRectangle', { fill: "lightgray" }),
-              
-			  $(go.TextBlock,
-				{ margin: 5 },
-				new go.Binding("text", "key")),
-			  {
-				selectionAdornmentTemplate:
-				  $(go.Adornment, "Spot",
-					$(go.Panel, "Auto",
-					  // this Adornment has a rectangular blue Shape around the selected node
-					  $(go.Shape, { fill: null, stroke: "dodgerblue", strokeWidth: 3 }),
-					  $(go.Placeholder)
-					),
-					// and this Adornment has a Button to the right of the selected node
-					$("Button",
-					  { alignment: go.Spot.Right, alignmentFocus: go.Spot.Left,
-						click: this.addNodeAndLink },  // define click behavior for Button in Adornment
-					  $(go.TextBlock, "ADD",  // the Button content
-						{ font: "bold 6pt sans-serif" })
-					)
-				  )  // end Adornment
-			  }
-			);
-          diagram.linkTemplate =
-                $(go.Link,
-                    { curve: go.Link.Bezier },  // Bezier curve
-                    $(go.Shape, { strokeWidth:2 }), // Grubość lini
-					$(go.Shape, { toArrow: "Standard" }),
-					
-                    $(go.Panel, "Auto",  // this whole Panel is a link label
-                       
-                        $(go.TextBlock,
-                        new go.Binding("text", "text"))
-                    )
+        	diagram.nodeTemplate =
+				$(go.Node, 'Auto', 
+				{ contextMenu: myContextMenu },
+           		new go.Binding('location', 'loc', go.Point.parse).makeTwoWay(go.Point.stringify),
+				$(go.Shape, 'RoundedRectangle', 
+					{ 
+						fill: "#fafafa", 
+						portId: "", 
+						fromLinkable: true, 
+						toLinkable: true, 
+						cursor: "pointer"
+					}
+				),
+			  	$(go.TextBlock,
+					{ 
+						margin: new go.Margin(5,5,5,5)
+					}, new go.Binding("text", "text")),
 				);
-				diagram.layout = $(go.TreeLayout);
-        
-        // diagram.nodeTemplate.contextMenu =
-		// 	$("ContextMenu", "Spot",              // that has several buttons around
-        //     $(go.Placeholder, { padding: 0 }),  // a Placeholder object
-		// 		$("ContextMenuButton", $(go.TextBlock, "<div style='background-color:red;' id='test'>elo elo</div>"),
-		// 		{ alignment: go.Spot.Top, alignmentFocus: go.Spot.Left, click: this.cmCommand }),
-		// 		$("ContextMenuButton", $(go.TextBlock, "-"),
-		// 		{ alignment: go.Spot.Top, alignmentFocus: go.Spot.Right, click: this.cmCommand }),
-		// 		$("ContextMenuButton", $(go.TextBlock, "->"),
-		// 		{ alignment: go.Spot.Top, alignmentFocus: go.Spot.Center, click: this.cmCommand })
-				
-		// 	);  // end Adornment
-				            
-        diagram.addDiagramListener("ObjectSingleClicked",
-            function(e) {
-              var part = e.subject.part;
-              console.log(part.data);
-              //if (!(part instanceof go.Link)) showMessage("Clicked on " + part.data.key);
-            });
-      
-          
-        
-        return diagram;
-    }
-  
+
+          	diagram.linkTemplate =
+				$(go.Link, {
+					routing: go.Link.AvoidsNodes,
+					corner: 10,
+					curve: go.Link.JumpGap
+				},
+				new go.Binding("points").makeTwoWay(),  
+				$(go.Shape),
+				$(go.Shape, { toArrow: "" })
+		  		);
+			
+			diagram.layout = $(go.TreeLayout);
+									
+		
+			diagram.addDiagramListener("ObjectSingleClicked", this.handleStickyContextmenu);
+			diagram.addDiagramListener("BackgroundSingleClicked", this.handleStickyContextmenuBackgroundSingleClicked);
+			diagram.addModelChangedListener(function(evt) {
+				if (evt.isTransactionFinished) {
+					console.log("ZAPISZ?");
+				}
+			});
+
+			  
+			return diagram;
+
+	}
     handleModelChange = (changes) => {
-        //console.log(changes);
-        
+
+		const currentMap = diagram.model.toJson();
+		const currentMapObject = JSON.parse(currentMap);
+
+		if ( changes.insertedNodeKeys !== undefined  || 
+				changes.insertLinkKeys !== undefined ) {
+
+			//this.handleSaveMap(currentMapObject);
+		}
+
+
+		
+		// console.log("ZMIANA", changes);
+
+		if ( changes.insertedNodeKeys && changes.insertedNodeKeys[0] > 0) {
+			
+			newNode = diagram.findNodeForKey(changes.insertedNodeKeys[0]);
+			if (newNode === null) {
+				return;  
+			}
+			this.editSelectionNode();
+		}
 	}
-	cmCommand = (e) => {
-		console.log(e);
+
+
+	changeTextHandler = (value) => {
+
+		var model = diagram.model;
+		var data = model.findNodeDataForKey(currentSelectedNode.key);
+		if (data) {
+			model.startTransaction("modified property");
+			model.set(data, "text", value);
+			// ... maybe modify other properties and/or other data objects
+			model.commitTransaction("modified property");
+		}
+
 	}
-    handleDiagramEvent = () => {
-        console.log("WORK");
-    }
-    
-    
+	saveEvent = (event) => {
+		this.setState({
+			edit_window: false
+		  });
+
+	}
+	handleDiagramEvent = (e) => {
+		console.log("handleDiagramEvent",e);
+	}
+
+
+	// ================================================================== //
+	// ======================== UPDATE FIRESTORE ======================== //
+	// ================================================================== //
+	
+	handleSaveMap = async () => {
+
+		const currentMap = diagram.model.toJson();
+		const currentMapObject = JSON.parse(currentMap);
+		
+		if(currentMapObject !== undefined) {
+			if( this.props.isLogged && this.props.userData.user_uid) {
+				const entriesRef = firestore.collection('users')
+					.doc(this.props.userData.user_uid)
+					.collection('maps').doc(this.props.currentMapId[0]).update({"map" : currentMapObject});
+			}		
+		}
+	}    
+
+	// ================================================================== //
+	// ======================== END OF FIRESTORE ======================== //
+	// ================================================================== //
+	
 
     render() {
-        let nodeDataArray = 
-        [
-            { key: 0, text: 'Alpha', color: 'lightblue', loc: '0 0' },
-            { key: 1, text: 'Beta', color: 'orange', loc: '150 0' },
-            { key: 2, text: 'Gamma', color: 'lightgreen', loc: '0 150' },
-            { key: 3, text: 'Delta', color: 'pink', loc: '150 150' }
-        ]
-        let linkDataArray = 
-        [
- 
-            { key: -2, from: 0, to: 2 },
-            { key: -3, from: 0, to: 1 },
-            { key: -4, from: 0, to: 3 },
 
-        ]
+
         return (
+			<IonPage>
+            	<IonHeader>
+                	<IonToolbar>
+						<IonButtons slot="start">
+						<IonMenuButton></IonMenuButton>
+						</IonButtons>
+						<IonTitle>
+							{map_title}
+						</IonTitle>
+                	</IonToolbar>
+            	</IonHeader>
+			
+            	<IonContent fullscreen={true}>
+
+				
             <Wrap>
                 <div className={classes.MindmapBuilder}>
                 <ReactDiagram
@@ -225,24 +414,77 @@ class MindMapBuilder extends Component {
                     divClassName={classes.DiagramComponent}
                     nodeDataArray={nodeDataArray}
                     linkDataArray={linkDataArray}
-                    onDiagramEvent={this.handleDiagramEvent}
                     onModelChange={this.handleModelChange}
                     />
-                    <div className={classes.ContextMenu} id="contextMenu">
-						<ul>
-							<li id="paste" onClick={this.pasteSelectionNode} className="menu-item">Paste</li>
-							<li id="remove" onClick={this.deleteSelectionNode} className="menu-item">delete</li>
-							<li id="copy" onClick={this.copySelectionNode} className="menu-item">copy</li>
-							<li id="add" onClick={this.addNodeAndLink} className="menu-item">add</li>
-						
-						</ul>
-						
-					</div>
+					<IonFab activated={this.state.contextIsOpen}  vertical="bottom" horizontal="end" slot="fixed">
+						<IonFabButton color="medium" size="small">
+							<IonIcon  icon={grid} />
+						</IonFabButton>
+						<IonFabList side="top">
+							<IonFabButton className={classes.IonAdd} color="tertiary" onClick={this.addNodeAndLink}>
+								<IonIcon icon={addOutline} />
+							</IonFabButton>
+						</IonFabList>
+						<IonFabList side="start">
+							<IonFabButton color="light" onClick={this.joinSelectionNode}>
+								<IonIcon icon={gitMerge} />
+							</IonFabButton>
+							<IonFabButton color="light" onClick={this.editSelectionNode}>
+								<IonIcon icon={text} />
+							</IonFabButton>
+							<IonFabButton id="copy" color="light" onClick={this.copySelectionNode}>
+								<IonIcon icon={copy} />
+							</IonFabButton>
+							{/* <IonFabButton color="light" onClick={this.pasteSelectionNode}>
+								<IonIcon icon={clipboard} />
+							</IonFabButton> */}
+							<IonFabButton color="danger" onClick={this.deleteSelectionNode}>
+								<IonIcon icon={trash} />
+							</IonFabButton>
+						</IonFabList>
+					</IonFab>
+
+					
+
+					
+					<Editor enabled={this.state.edit_window}
+							selectedObject = {currentSelectedNode}
+							changeTextHandler =  {this.changeTextHandler} 
+							saveEvent = {this.saveEvent}>
+					</Editor>
                 </div>
+				{/* <div className={classes.SavedMap}>
+					<textarea defaultValue={this.state.currentMapModel} name="saved_map"></textarea>
+				</div> 
+				<SaveProject/>*/}
             </Wrap>
+			</IonContent>
+				</IonPage>
             
         )
     }
 }
 
-export default MindMapBuilder;
+
+
+// Rzutowanie globalnego state do props
+const mapStateToProps = state => {
+    console.log(state);
+    return {
+        isLogged: state.user.isLogged,
+		currentMapId : state.maps.currentmapid,
+		allMaps : state.maps.mindmaps,
+		userData: state.user.userData
+    };
+}
+
+// rzutowanie funkcji do odpowiedniego dispatcha
+const mapDispatchToProps  = dispatch => {
+	return {
+		handleLoginStatus: () => dispatch({type: actionTypes.LOGIN_STATUS, value:true})
+	}
+	
+}
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(MindMapBuilder);

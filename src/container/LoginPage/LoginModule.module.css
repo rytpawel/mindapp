@@ -1,0 +1,20 @@
+.CustomInput {
+    
+    box-sizing: border-box;
+   
+    padding: 3px 10px!important;
+
+
+    border-radius: 3px;
+    width: 100%!important;
+
+}
+.CustomButtom {
+    margin-top: 25px!important;
+   
+}
+.GoogleButton {
+    width: 100%!important;
+    display: flex!important;
+
+}

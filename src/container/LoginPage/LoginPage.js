@@ -1,45 +1,213 @@
-import React, {Component} from 'react';
+import {
+    IonContent,
+    IonPage,
+    IonTitle,
+    IonToolbar,
+    IonButton,
+    IonList,
+    IonItem,
+    IonInput,
+    IonLabel,
+    IonText,
+    IonToast,
+    IonLoading,
+    IonItemDivider,
+    IonItemGroup,
+    IonIcon,IonHeader,
+    IonButtons,
+    IonMenuButton
+} from '@ionic/react';
+import { logoGoogle } from 'ionicons/icons';
 
-//Library 
-import GoogleLogin from 'react-google-login';
-// docs: https://www.npmjs.com/package/react-google-login
+import React, { useState, useEffect } from 'react';
 
-//Styles
-import classes from './LoginPage.module.css';
+import {auth} from './../../firebase';
+import {connect} from 'react-redux';
+import * as actionTypes from '../../store/actions';
 
-class LoginPage extends Component {
-    
-    state = {
-        isLogged : false,
-        accoutData : null
+import firebase from 'firebase';
+
+import {cfaSignIn} from 'capacitor-firebase-auth';
+import { Redirect } from 'react-router';
+
+import classes from './LoginModule.module.css';
+
+const loginStatusObject = {
+    isLogged: false,
+    userData: {},
+    loggedMethod : '',
+}
+const LoginPage = (props) => {
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState(false);
+    const [error_message, setErrorMessage] = useState("");
+    const [showToast, setShowToast] = useState("");
+    const [showLoading, setShowLoading] = useState(false);
+
+    const showSuccessToast = () => {
+        setShowToast(true);
+
+        setTimeout( ()=>{
+            setShowToast(false);
+            props.history.push('/my-projects');
+        }, 2500);
+        setShowLoading(false);
     }
 
-    render () {
-        // responseGoogle;
-        const responseGoogleSuccess = (res) => {
-            this.setState({isLogged: true, accoutData: res.profileObj});
-            console.log(this.state.isLogged);
+    const showErrorMessage = (error) => {
+        if(error.code === "auth/wrong-password"){
+            setErrorMessage("Twój login lub hasło jest niepoprawne. Sprawdź podane dane i spróbuj ponownie.");
+        } else {
+            setErrorMessage(error.message);
         }
-        const responseGoogleFailure = (res) => {
-            this.setState({isLogged: false, accoutData: null});
-            console.log(this.state.isLogged);
+        setShowLoading(false);
+        setError(true);
+
+        setTimeout( ()=>{
+            setError(false);
+        }, 3000);
+    }
+    const handleLoginGoogle =  () => {
+        try {
+            cfaSignIn('google.com').subscribe(
+                (user) => {
+                    user.providerData.forEach(function (profile) {
+						console.log("Sign-in provider: " + profile.providerId);
+						console.log("  Name: " + profile.displayName);
+						console.log("  Email: " + profile.email);
+						console.log("  Photo URL: " + profile.photoURL);
+						loginStatusObject.userData = { 
+							user_uid : profile.uid,
+							user_email:profile.email, 
+							user_name:profile.displayName, 
+							user_image_url:profile.photoURL
+						};
+						loginStatusObject.loggedMethod = profile.providerId;
+                    });
+                    loginStatusObject.isLogged = true;
+                    showSuccessToast();
+                    props.handleUserStatus();
+                }
+            )
+        } catch (e) {
+            showErrorMessage(e);
         }
         
-        return (
-            <div className={classes.LoginPage}>
-                <div>
-                    <GoogleLogin
-                        clientId="376961690967-ogf1p3bo5239mnoi9pm97hdspp2lsvjd.apps.googleusercontent.com"
-                        buttonText="Sign-up with Google Account"
-                        onSuccess={responseGoogleSuccess}
-                        onFailure={responseGoogleFailure}
-                        cookiePolicy={'single_host_origin'}
-                        isSignedIn={true}
-                    />
-                </div>
-                
-            </div>
-        )
     }
+
+    const handleLogin = async () => {
+        setShowLoading(true);
+        try {
+            const credential  = await auth.signInWithEmailAndPassword(email, password);
+            loginStatusObject.isLogged = true;
+            loginStatusObject.userData = {user_email:email, user_name:email, user_image_url:null};
+            loginStatusObject.loggedMethod = 'signInWithEmailAndPassword';
+            console.log("Success", credential);
+            showSuccessToast();
+            props.handleUserStatus();
+        } catch (e) {
+            showErrorMessage(e);
+        }
+    }
+    const redirectIfLogged = () => {
+        if ( props.isLogged ) {
+            props.history.push('/my-projects');
+        }
+    }
+    redirectIfLogged();
+
+    return (
+        <IonPage>
+            <IonHeader>
+                <IonToolbar>
+                    <IonButtons slot="start">
+                    <IonMenuButton></IonMenuButton>
+                    </IonButtons>
+                    <IonTitle>
+                        Zaloguj się
+                    </IonTitle>
+                </IonToolbar>
+            </IonHeader>
+            <IonContent fullscreen={true}>
+                <IonItemGroup>
+                    <IonItemDivider color="light">
+                        <IonLabel>Tradycyjne logowanie..</IonLabel>
+                    </IonItemDivider>
+                    <IonList inset={true}>
+                        <IonItem lines="full">
+                            <IonLabel color="primary" position="floating">Twój E-mail</IonLabel>
+                            <IonInput className={classes.CustomInput} 
+                                        autocomplete="email"  
+                                        autocomplete={true} 
+                                        inputmode="email" 
+                                        type="email" 
+                                        placeholder='email@example.com' 
+                                        required={true} 
+                                        value={email} 
+                                        onIonChange={(event) => { setEmail(event.detail.value); }}
+                            />
+                        </IonItem>
+                        <IonItem lines="full">
+                            <IonLabel color="primary" position="floating">Hasło</IonLabel>
+                            <IonInput className={classes.CustomInput} 
+                                        type="password" 
+                                        placeholder='password' 
+                                        onIonChange={(event) => { setPassword(event.detail.value);  }}
+                            />
+                        </IonItem>
+                        <IonButton className={classes.CustomButtom} color="primary" expand="block" onClick={handleLogin}>Zaloguj się</IonButton>
+                    </IonList>
+                </IonItemGroup>
+                <br></br>
+                <IonItemGroup>
+                    <IonItemDivider color="light">
+                        <IonLabel >lub</IonLabel>
+                    </IonItemDivider>
+                    <IonList inset={true}>
+                        <IonItem lines="full">
+                            <IonButton 
+                                className={classes.GoogleButton} 
+                                expand="block" 
+                                size="default" 
+                                padding 
+                                color="primary" 
+                                expand="full" 
+                                onClick={handleLoginGoogle} 
+                            > 
+                                <IonIcon icon={logoGoogle} slot="start" /> Google Login
+                            </IonButton>
+                        </IonItem>
+                    </IonList>
+                </IonItemGroup>
+                <IonToast color="success" isOpen={showToast} message="Jesteś zalogowany, złotko!"/>
+                <IonToast color="danger" isOpen={error} message={error_message}/>
+                <IonLoading
+                    isOpen={showLoading}
+                    onDidDismiss={() => setShowLoading(false)}
+                    message={'Trwa autoryzacja..'}
+                    duration={5000}
+                />
+            </IonContent>
+        </IonPage>
+    )
 }
-export default LoginPage;
+
+// Rzutowanie globalnego state do props
+const mapStateToProps = state => {
+    return {
+        isLogged: state.user.isLogged
+    };
+}
+
+// rzutowanie funkcji do odpowiedniego dispatcha
+const mapDispatchToProps  = dispatch => {
+    return {
+        handleUserStatus : () => dispatch({type:actionTypes.USER_STATUS, value: loginStatusObject})
+    }
+
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(LoginPage);
+
