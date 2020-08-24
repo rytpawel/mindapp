@@ -40,11 +40,9 @@ const MyProjects = (props) => {
     
 
     let deleteMap = (id) => {
-        console.log("USUWAM");
         const deleteItemId = id;
         const entriesRef =  firestore.collection("users").doc(props.userData.user_uid).collection("maps");
         let usuwanko =  entriesRef.doc(deleteItemId).delete().then(()=>{
-            console.log("DONE");
         });
         
         
@@ -74,7 +72,6 @@ const MyProjects = (props) => {
                                 0 projektów
                             </IonLabel>
                         </IonItem>;
-    console.log(props.allMaps);
     if(props.allMaps!==undefined && props.allMaps !== null && props.allMaps !== {}) {
         
         list_of_maps = Object.entries(props.allMaps).map((key, i) => {
