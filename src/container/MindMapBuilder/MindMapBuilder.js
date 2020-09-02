@@ -1,8 +1,10 @@
 // Library
 import React, { useState, useEffect } from 'react';
 import * as go from 'gojs';
-import { ReactDiagram } from 'gojs-react';
+// import DoubleTreeLayout from 'gojs/extensions/DoubleTreeLayout';
 
+import { ReactDiagram } from 'gojs-react';
+import {DoubleTreeLayout} from 'gojs/extensionsJSM/DoubleTreeLayout';
 import {connect} from 'react-redux';
 import * as actionTypes from '../../store/actions';
 
@@ -64,7 +66,7 @@ let map_title = 'Untitled';
 let new_text = '';
 
 const MindMapBuilder = (props) => {
-	let [currentNode, setCurrentNode] = useState(null);
+	let [currentNode, setCurrentNode] = useState({});
 	let [contextIsOpen, setContextIsOpen] = useState(false);
 	let [editorIsOpen, setEditorIsOpen] = useState(false);
 	let [refresh, triggerRefresh] = useState('');
@@ -157,12 +159,8 @@ const MindMapBuilder = (props) => {
 	}
 	const handleStickyContextmenu = (data) => {
 		console.log("handleStickyContextmenu" , data.subject.part.data);
-		
 		setCurrentNode(data.subject.part.data);
-
-		
 		setContextIsOpen(true);
-		
 	}
 
 	const handleStickyContextmenuBackgroundSingleClicked = (data) => {
@@ -219,10 +217,31 @@ const MindMapBuilder = (props) => {
 		if ( currentNode ) {
 			
 			diagram.startTransaction("add node and link");
+			let key_generator = 1 + Math.random() * (99999 - 1);
+			let new_location_x = "0";
+			let new_location_y = "0";
+			if ( diagram.findNodeForKey(0) === undefined || diagram.findNodeForKey(0) === null ) {
+				key_generator = 0 ;
+				new_location_x = "0";
+				new_location_y = "0";
+			}
+			let currentLocation = go.Point.parse(currentNode.location);
+			console.log();
 
-			const key_generator = 1 + Math.random() * (99999 - 1);
+			if( currentLocation.x >= 0 ) {
+				new_location_x = currentLocation.x + 150;
+				
+			} else {
+				new_location_x = currentLocation.x - 150;
+			}
 
-			let new_node = { key: key_generator,source: 'https://placehold.it/30x30' };
+			
+			new_location_y = currentLocation.y;
+			
+			
+			let new_location = new_location_x + ' ' + new_location_y;
+
+			let new_node = { key: key_generator, text : '', desc:'', location: new_location};
 			diagram.model.addNodeData(new_node);
 
 			let new_link = { from: currentNode.key, to: new_node.key };
@@ -246,7 +265,7 @@ const MindMapBuilder = (props) => {
         "pink": "#faadc1",
         "purple": "#d689ff",
         "orange": "#f08c00"
-      }
+    }
 
       let ColorNames = [];
       for (let n in Colors) ColorNames.push(n);
@@ -266,15 +285,7 @@ const MindMapBuilder = (props) => {
 		}
 		return "";
 	  }
-	  const  textStyle = () => {
-        return { font: "13pt  Segoe UI,sans-serif", stroke: "red" };
-	  }
-	  const mayWorkFor = (node1, node2) => {
-        if (!(node1 instanceof go.Node)) return false;  // must be a Node
-        if (node1 === node2) return false;  // cannot work for yourself
-        if (node2.isInTreeOf(node1)) return false;  // cannot work for someone who works for you
-        return true;
-      }
+	 
     const initDiagram = () => {		
 
 			window.addEventListener('beforeunload', (event) => {
@@ -290,42 +301,76 @@ const MindMapBuilder = (props) => {
 				hide: hideContextMenu()
 			});
 
-
-        diagram =
-          $(go.Diagram,
-            {
-              'undoManager.isEnabled': true,  
-              'clickCreatingTool.archetypeNodeData': { text: 'new node', color: 'lightblue' },
-            	model: $(go.GraphLinksModel, {
-                	linkKeyProperty: 'key'  
-                })
-			});
+		diagram =
+		$(go.Diagram,
+		  {
+			'undoManager.isEnabled': true,  
+			'clickCreatingTool.archetypeNodeData': { text: 'new node', color: 'lightblue' },
+			  model: $(go.GraphLinksModel, {
+				  linkKeyProperty: 'key'  
+			  }),
 			
+			 
+		  });
+
+		
+
 			diagram.contextMenu = myContextMenu;
 		
-        	diagram.nodeTemplate =
-				$(go.Node, "Vertical",  // the whole node panel
-				$(go.TextBlock,  // the text label
-				new go.Binding("text", "key")),
-				$(go.Picture,  // the icon showing the logo
-				// You should set the desiredSize (or width and height)
-				// whenever you know what size the Picture should be.
-				{ desiredSize: new go.Size(75, 50) },
-				new go.Binding("source", "key", convertKeyImage))
-			);
-
+			diagram.nodeTemplate =
+			
+				$(go.Node, "Auto", 
+				{
+					locationSpot: go.Spot.Center,
+					resizable: true,
+					resizeObjectName: "PH",
+					isShadowed: true,
+                	shadowColor: 'gray',
+                	shadowOffset: new go.Point(2,2),
+				},
+				
+				new go.Binding("location", "location", go.Point.parse).makeTwoWay(go.Point.stringify),
+				 // the whole node panel
+				
+					$(go.Shape, "RoundedRectangle", { name: "PH", strokeWidth: 0, fill: "white" },
+						new go.Binding("fill", "color").makeTwoWay(),
+						new go.Binding("desiredSize", "size", go.Size.parse).makeTwoWay(go.Size.stringify)),
+						
+						$(go.Panel, "Table",
+						{ defaultAlignment: go.Spot.Left },
+							$(go.Picture,  
+								{ maxSize: new go.Size(50, 50), imageStretch: go.GraphObject.Uniform, column: 0, rowSpan: 2, margin: new go.Margin(0, 10, 0, 0), stretch: go.GraphObject.Vertical},
+								new go.Binding("source", "key", convertKeyImage).makeTwoWay(go.Point.stringify)
+							),
+							$(go.TextBlock, {  column: 1,  margin: new go.Margin(0, 5, 0, 0)}, 
+								new go.Binding("text", "text").makeTwoWay(), 
+								new go.Binding("stroke", "color_font").makeTwoWay(),
+								new go.Binding("scale", "scale").makeTwoWay(),
+								new go.Binding("desc", "text").makeTwoWay(), 
+								new go.Binding("font", "font").makeTwoWay(),
+							),
+							$(go.TextBlock, {  column: 1, row: 1,  margin: new go.Margin(0,10, 0, 0), overflow: go.TextBlock.OverflowEllipsis, maxLines: 2, width: 200,  wrap: go.TextBlock.WrapFit}, 
+								new go.Binding("text", "desc").makeTwoWay(), 
+								new go.Binding("stroke", "color_font").makeTwoWay(),
+							),
+						)
+				);
+			
 			
 					
-          	diagram.linkTemplate =
-			  $(go.Link,  // the whole link panel
-				{ curve: go.Link.Bezier, toShortLength: 2 },
-				$(go.Shape,  // the link shape
-				  { strokeWidth: 1.5 }),
-				$(go.Shape,  // the arrowhead
-				  { toArrow: "Standard", stroke: null })
-			  );
+			diagram.linkTemplate =
+			$(go.Link,
+			  { toShortLength: 3, relinkableFrom: true, relinkableTo: true,reshapable: true, curve: go.Link.Bezier },
+			  new go.Binding("points").makeTwoWay(),  // allow the user to relink existing links
+			  $(go.Shape,
+				{ strokeWidth: 2 },
+				new go.Binding("stroke", "color")),		  
+			);
 			
-			diagram.layout = $(go.TreeLayout);
+			//diagram.layout = $(ForceDirectedLayout);
+			//console.log(DoubleTreeLayout);
+			//diagram.layout = $(DoubleTreeLayout);
+			
 									
 		
 			diagram.addDiagramListener("ObjectSingleClicked", handleStickyContextmenu);
@@ -333,17 +378,23 @@ const MindMapBuilder = (props) => {
 			diagram.addModelChangedListener( (evt) => {
 				if (evt.isTransactionFinished) {
 					console.log("isTransactionFinished");
+					console.log(evt);
 					//this.handleSaveMap();
 				}
 			});
-
+			
+			  
+			  return diagram;
 		
-			return diagram;
 	}
-    const handleModelChange = (changes) => {
+
+	
+	  
+	  const handleModelChange = (changes) => {
 
 		const currentMap = diagram.model.toJson();
 		currentMapObject = JSON.parse(currentMap);
+		console.log(currentMapObject);
 
 		if ( changes.insertedNodeKeys !== undefined  || 
 				changes.insertLinkKeys !== undefined ) {
@@ -368,21 +419,34 @@ const MindMapBuilder = (props) => {
 
 	const changeTextHandler = (value) => {
 		new_text = value;
-		
 	}
-	const saveEvent = () => {
-
-		const data = diagram.model.findNodeDataForKey(currentNode.key);
-		if (data) {
-			diagram.model.startTransaction("modified property");
-			diagram.model.set(data, "text", new_text);
-			diagram.model.commitTransaction("modified property");
+	
+	const saveEvent = (newNodeData) => {
+		
+		if(currentNode !== undefined && currentNode !== null  && currentNode.key !== undefined) {
+			const data = diagram.model.findNodeDataForKey(currentNode.key);
+			console.log(newNodeData);
+			if (data) {
+				diagram.model.startTransaction("modified property");
+				diagram.model.set(data, "text", newNodeData.text);
+				diagram.model.set(data, "desc", newNodeData.desc);
+				diagram.model.set(data, "source", newNodeData.source);
+				diagram.model.set(data, "location", newNodeData.location);
+				diagram.model.set(data, "color", newNodeData.color);
+				diagram.model.set(data, "color_font", newNodeData.color_font);
+				
+				diagram.model.commitTransaction("modified property");
+				handleSaveMap();
+				setEditorIsOpen(false);
+				setCurrentNode(null);
+				setContextIsOpen(false);
+				if( newNodeData.source !== '' ) {
+					let model_tmp = diagram.model.toJson();
+					diagram.model = go.Model.fromJson(model_tmp);
+				}
+			}
 		}
 		
-		handleSaveMap();
-		setEditorIsOpen(false);
-		setCurrentNode(null);
-		setContextIsOpen(false);
 	}
 
 	const handleDiagramEvent = (e) => {
@@ -439,15 +503,17 @@ const MindMapBuilder = (props) => {
 						</IonFabList>
 					</IonFab>
 					<Editor enabled={editorIsOpen}
-							selectedObject = {currentNode}
-							changeTextHandler =  {changeTextHandler} 
+							selectedObject = {  currentNode }
+							changeTextHandler =  {changeTextHandler}
 							saveEvent = {saveEvent}>
 					</Editor>
+
 				</div>
 			{/* <div className={classes.SavedMap}>
 				<textarea defaultValue={this.state.currentMapModel} name="saved_map"></textarea>
 			</div> 
 			<SaveProject/>*/}
+			
 
 			</IonContent>
 		</IonPage>

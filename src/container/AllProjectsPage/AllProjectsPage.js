@@ -43,7 +43,7 @@ const MyProjects = (props) => {
         const deleteItemId = id;
         const entriesRef =  firestore.collection("users").doc(props.userData.user_uid).collection("maps");
         let usuwanko =  entriesRef.doc(deleteItemId).delete().then(()=>{
-        });
+    });
         
         
     }
