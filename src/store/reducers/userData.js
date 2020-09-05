@@ -32,6 +32,14 @@ const reducer = (state = initialState, action) => {
                 methodOfLogged : action.value.loggedMethod,
                 userData : action.value.userData
             }
+        case actionTypes.USER_AVATAR:
+            return {
+                ...state,
+                userData : { 
+                    ...state.userData,
+                    user_image_url : action.value
+                }
+            }
         default :
             return {
                 ...state,

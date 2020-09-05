@@ -18,3 +18,66 @@
 .UserName {
     text-align: center;
 }
+.CustomInput {
+    
+    box-sizing: border-box;
+   
+    padding: 3px 10px!important;
+
+
+    border-radius: 3px;
+    width: 100%!important;
+
+}
+.CustomButtom {
+    margin-top: 25px!important;
+   
+}
+.GoogleButton span {
+    text-align: left;
+    min-width: 160px;
+}
+
+.GoogleButton ion-icon {
+    padding: 10px;
+    padding-left: 0px;
+    border-right: 1px solid rgba(0,0,0,0.2);
+    margin-right: 10px;
+
+}
+.ProfileContainer {
+    max-width: 600px;
+    display: block;
+    margin: auto;
+    border-radius: 10px;
+    margin-top: 30px;
+    
+
+}
+.ProfileContainer ion-button {
+    margin:auto;
+    margin-top: 15px;
+}
+.Logo {
+    max-height: 80px;
+    width: 80%;
+    display: block;
+    margin: auto;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    object-fit: contain;
+    height: auto;
+}
+.BigTitle {
+    font-size: 18px;
+    margin-left: 0px;
+}
+@media screen and (min-width: 700px) {
+    .ProfileContainer {
+        box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+        padding: 30px;
+    }
+    .BigTitle {
+        font-size: 22px;
+    }
+}

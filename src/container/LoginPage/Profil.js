@@ -20,32 +20,48 @@ import {
     IonAvatar,
     IonHeader,
     IonButtons,
-    IonMenuButton
+    IonMenuButton,
+    IonActionSheet
 } from '@ionic/react';
 
 import {connect} from 'react-redux';
 import * as actionTypes from '../../store/actions';
-import {request} from '../AllProjectsPage/UserData';
+
 import classes from './Profile.module.css';
+import {storage} from '../../firebase'; 
+import Logout from '../LoginPage/Logout';
+
+import { close, image, settings, text} from 'ionicons/icons';
+import sygnet from '../../sygnet.png';
 
 const Profile = (props) => {
-    const [imageSrc, setimageSrc] = useState('');
-    const getImage = () => {
-        if(props.isLogged && props.userData.user_image_url) {
-            const temp = request(props.userData.user_image_url);
-            temp.then((e)=>{         
-                if (e.url !== undefined && e.url !=""){
-                    setimageSrc( e.url);
-                    console.log(e.url);
-                } else {
-                    setimageSrc('https://ionicframework.com/docs/demos/api/avatar/avatar.svg');
-                }
-                    
-            })
+    const [showActionSheet, setShowActionSheet] = useState(false);
+    const [avatar, setAvatar ] = useState(sygnet);
+
+    useEffect(()=>{
+        if( props.isLogged  === undefined || ! props.isLogged ) {
+            console.log("Redirect to Login");
+            props.history.push('/login');
+            console.log(props.userData);
         }
-        
+    }, [props.isLogged]);
+
+    useEffect(()=>{
+       if ( props.userData.user_image_url == undefined || props.userData.user_image_url.includes('googleusercontent') ) {
+            setAvatar(sygnet);
+       } else {
+            setAvatar(props.userData.user_image_url);
+       }
+    }, [props.userData.user_image_url]);
+
+    
+    const handleChangeName = () => {
+        console.log("handleChangeName");
     }
-    getImage();
+    const handleChangeAvatar = () => {
+        console.log("handleChangeAvatar");
+    }
+    
     return (
         <IonPage>
             <IonHeader>
@@ -59,15 +75,52 @@ const Profile = (props) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent fullscreen={false}>
-            <IonItemGroup>
-                <div className={classes.Avatar}>
-                    <img src={imageSrc} />
-                </div>
-                <div className={classes.UserName}>
-                    <span>{props.userData.user_name}<br/><small>{props.userData.user_email}</small></span>
-                </div>
+            <div className={classes.ProfileContainer}>
+                <IonItemGroup>
+                    <div className={classes.Avatar}>
+                        <img src={avatar} />
+                    </div>
+                    <div className={classes.UserName}>
+                        <span>{props.userData.user_name}<br/><small>{props.userData.user_email}</small></span>
+                    </div>
                 </IonItemGroup>
+                <IonItem lines="none" hidden="true" >
+                    <IonButton 
+                            
+                            size="default" 
+                            padding 
+                            color="primary" 
+                            onClick={() => {setShowActionSheet(true)}} 
+                            expand="block" 
+                            fill="solid"
+                        > 
+                        <IonIcon icon={settings} slot="start" /> <span>Opcje</span>
+                    </IonButton>
+                </IonItem>
+
+                <Logout/>
+
+            </div>
             </IonContent>
+            <IonActionSheet
+                    isOpen={showActionSheet}
+                    onDidDismiss={() => setShowActionSheet(false)}
+                    buttons={[
+                        { text: 'Zmień nazwę użytkownia',
+                            icon: text,
+                            handler: () => { handleChangeName(); }
+                        },{ text: 'Zmień zdjęcie profilowe',
+                            icon: image,
+                            handler: () => { handleChangeAvatar(); }
+                        },
+                        { text: 'Anuluj',
+                            icon: close,
+                            role: 'cancel',
+                            handler: () => { setShowActionSheet(false)}
+                        }]}
+                >
+                </IonActionSheet>
+
         </IonPage>
     );
 }
@@ -83,7 +136,7 @@ const Profile = (props) => {
     // rzutowanie funkcji do odpowiedniego dispatcha
     const mapDispatchToProps  = dispatch => {
         return {
-            handleUserStatus : () => dispatch({type:actionTypes.USER_STATUS, value: {}})
+            handleUserAvatar : () => dispatch({type:actionTypes.USER_AVATAR, value: ''})
         }
     
     }

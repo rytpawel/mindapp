@@ -2,7 +2,7 @@ import React, { useState, useEffect,useRef} from 'react';
 import Wrap from '../hoc/Wrap';
 import {connect} from 'react-redux';
 import * as actionTypes from '../../store/actions';
-import { TwitterPicker } from 'react-color';
+import { CirclePicker } from 'react-color';
 
 //Styles
 import classes from './Editor.module.css';
@@ -159,7 +159,7 @@ const Editor = (props) => {
 						<IonContent>
 							<IonToolbar>
 								<IonTitle>
-									Dodaj nowy
+									Nowy węzeł
 								</IonTitle>
 								<IonButtons slot="end">
 									<IonButton className={classes.BtnClose}  onClick={() => {setPictureUrl(placeholder_image); props.saveEvent(newNode);} }>Dodaj</IonButton>
@@ -171,18 +171,26 @@ const Editor = (props) => {
                                         <IonLabel color="dark" position="floating">Nazwa</IonLabel>
                                         <IonTextarea value={newNode.text} placeholder="Enter name of Node..." onIonChange={(e) => handleText(e.detail.value)}></IonTextarea>
                                     </IonItem>
-                                    <IonItem>
+                                    <IonItem >
                                         <IonLabel color="dark" position="floating">Krótki opis</IonLabel>
                                         <IonTextarea value={newNode.desc} placeholder="Enter more information here..." onIonChange={(e) => handleDesc(e.detail.value)}></IonTextarea>
                                     </IonItem>
-                                    <IonItem>
-                                    
-                                        <TwitterPicker onChangeComplete={handleChangeColor} />
+                                    <IonItem lines="none">
+                                        <IonLabel  color="dark" >Kolor węzła</IonLabel>
 
                                     </IonItem>
-                                    <IonItem>
-                                        <IonLabel color="dark" position="floating">Image</IonLabel>
-                                        <br></br>
+                                    
+                                    <IonItem lines="none">
+                                    
+                                        <CirclePicker  className={classes.CirclePicker} color={ newNode.color } onChangeComplete={handleChangeColor} />
+                                        <br/><br/>
+                                    </IonItem>
+                                    <IonItem></IonItem>
+                                    
+                                    <IonItem lines="none">
+                                        <IonLabel  color="dark">Obrazek <small>(kliknij w zdjęcie)</small></IonLabel>
+                                    </IonItem>
+                                    <IonItem lines="none">
                                         <input hidden type="file" accept="image/*" onChange={handleFileChange} ref={fileInputRef}/>
                                         <img src={placeholder_image} alt="" onClick={handleImageLoad}  />
                                     </IonItem>

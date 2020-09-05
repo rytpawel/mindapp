@@ -11,11 +11,7 @@
 }
 .CustomButtom {
     margin-top: 25px!important;
-    display: flex;
-}
-.CustomButtom2 {
-    display: flex;
-    margin:auto;
+   
 }
 .GoogleButton span {
     text-align: left;
@@ -29,7 +25,7 @@
     margin-right: 10px;
 
 }
-.LoginContainer ion-item-group{
+.LogoutContainer ion-item-group{
     max-width: 600px;
     display: block;
     margin: auto;
@@ -53,7 +49,7 @@
     margin-left: 0px;
 }
 @media screen and (min-width: 700px) {
-    .LoginContainer ion-item-group{
+    .LogoutContainer ion-item-group{
         box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
         padding: 30px;
     }

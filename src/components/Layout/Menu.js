@@ -26,21 +26,16 @@ import Wrap from '../hoc/Wrap';
 import LogOut from '../../container/LoginPage/Logout';
 import {connect} from 'react-redux';
 import {request} from '../../container/AllProjectsPage/UserData';
+import sygnet from '../../sygnet.png';
+import logoTyp from '../../logo-logotyp.png';
+import classes from './Menu.module.css';
 
 const Menu = (props) => {
     const [menuTitle, setMenuTitle] = useState('');
     const [imageSrc, setimageSrc] = useState('');
     const [quantityMaps, setQuantityMaps] = useState(0);
     let userMinidata = '';
-    const getImage = async () => {
-        if(props.isLogged && props.userData.user_image_url) {
-            const temp = request(props.userData.user_image_url);
-            temp.then((e)=>{               
-                setimageSrc( e.url);
-            })
-        }
-        
-    }
+  
     const countMaps = () => {
         if ( props.isLogged ) {
             var count = Object.keys(props.mindMaps).length;
@@ -50,29 +45,32 @@ const Menu = (props) => {
         }
     }
 
-    getImage();
+   
     countMaps();
     if(props.isLogged && props.userData.user_name ) {
         if(props.userData.user_image_url) {
             userMinidata = <IonItem>
                 <IonAvatar slot="start">
-                    <img src={imageSrc} />
+                    <img src={sygnet} />
                 </IonAvatar>
                 <IonLabel>{props.userData.user_name}</IonLabel>
             </IonItem> ;
         } else {
             userMinidata = <IonItem>
                 <IonAvatar slot="start">
-                    <img src="https://ionicframework.com/docs/demos/api/avatar/avatar.svg" />
+                    <img src={sygnet} />
                 </IonAvatar>
                 <IonLabel>{props.userData.user_name}</IonLabel>
             </IonItem> ;
         }
     }
      else {
-        userMinidata = <IonTitle>
-                            Menu
-                        </IonTitle>;
+        userMinidata = <IonItem>
+                        <IonAvatar slot="start">
+                            <img src={sygnet} />
+                        </IonAvatar>
+                        <IonLabel>{props.userData.user_name}</IonLabel>
+                    </IonItem> ;
     }
     return (
         <Wrap>
@@ -90,14 +88,6 @@ const Menu = (props) => {
                                     <IonIcon icon={addCircleOutline} slot="start" />
                                     <IonLabel>
                                         <h2>Edytor</h2>
-                                    </IonLabel>
-                                </IonItem>
-                            </NavigationItem>
-                            <NavigationItem link="/new-map" exact>
-                                <IonItem lines="none">
-                                    <IonIcon icon={addCircleOutline} slot="start" />
-                                    <IonLabel>
-                                        <h2>Nowy projekt</h2>
                                     </IonLabel>
                                 </IonItem>
                             </NavigationItem>
@@ -120,21 +110,13 @@ const Menu = (props) => {
                                     </IonLabel>
                                 </IonItem>
                             </NavigationItem>
-                            <NavigationItem  link="/faq">
-                                <IonItem  lines="none">
-                                    <IonIcon icon={helpCircleOutline} slot="start" />
-                                    <IonLabel>
-                                        <h2>FAQ</h2>
-                                    </IonLabel>
-                                </IonItem>
-                            </NavigationItem>
+                            
                         </IonMenuToggle>
                     </IonList>
                 </IonContent>
                 <IonFooter class="bar-stable">
                     <IonMenuToggle auto-hide="true">
                         <IonList>
-                            <LogOut/>
                             <NavigationItem hidden={props.isLogged} link="/login">
                                 <IonItem hidden={props.isLogged} lines="none">
                                     <IonIcon icon={logInOutline} slot="start" />

@@ -19,16 +19,23 @@ import {
     IonIcon,
     IonAvatar,IonHeader,IonButtons,IonMenuButton,IonModal,IonTextarea,IonCard,IonCardContent,IonCardHeader,IonItemSliding,IonItemOptions,IonItemOption, IonListHeader,
     IonActionSheet,
-    IonAlert
+    IonAlert,
+    IonFabButton,
+    IonFab,
+    IonRefresher, 
+    IonRefresherContent
     
 
 } from '@ionic/react';
 
-import { trash, share,heart,play , close, text} from 'ionicons/icons';
+import { trash, chevronDownCircleOutline, share,heart,play , close, text, add} from 'ionicons/icons';
 //Library
 import {Route, Switch} from 'react-router-dom';
-
+import NewMap from '../MindMapBuilder/NewMap';
+import EditMap from '../MindMapBuilder/EditMap';
 import { firestore } from './../../firebase';
+
+import sygnet from '../../sygnet.png';
 let mapToEdit = '';
 let selectedMapID = '';
 
@@ -37,15 +44,23 @@ const MyProjects = (props) => {
     let [isDeleted, setIsDeleted] = useState(false);
     let [showActionSheet, setShowActionSheet] = useState(false);
     let [showDeletedAlert, setShowDeletedAlert] = useState(false);
-    
+    let [showEditor, setShowEditor] = useState(false);
 
     let deleteMap = (id) => {
         const deleteItemId = id;
         const entriesRef =  firestore.collection("users").doc(props.userData.user_uid).collection("maps");
         let usuwanko =  entriesRef.doc(deleteItemId).delete().then(()=>{
+            window.location.reload(true);
     });
         
         
+    }
+
+    const doRefresh = () => {
+        setTimeout(() => {
+            window.location.reload(true);
+            
+          }, 1000);
     }
 
     const handleClick = (map_id) => {
@@ -65,30 +80,46 @@ const MyProjects = (props) => {
     }
     const handleEditName = () => {
         console.log("Edit name not working yet");
+        console.log(selectedMapID);
+        setShowEditor(true);
     }
+    const finishEditName = () => {
+        
+        setShowEditor(false);
+    }
+
 
     let list_of_maps = <IonItem>
                             <IonLabel>
                                 0 projektów
                             </IonLabel>
                         </IonItem>;
+    if( props.isLogged  === undefined || ! props.isLogged ) {
+        console.log("Redirect to Login");
+        props.history.push('/login');
+    }
     if(props.allMaps!==undefined && props.allMaps !== null && props.allMaps !== {}) {
         
         list_of_maps = Object.entries(props.allMaps).map((key, i) => {
+            let url = '';
+            if ( key[1].image != '') {
+                url = key[1].image;
+            } else {
+                url = sygnet;
+            }
+            
             return (
                 <IonItemSliding key={i}>
                     <IonItem onClick={() => {handleClick(key[0])}}>
                         <IonAvatar slot="start">
-                            <img src="https://placehold.it/50x50"/>
+                            <img src={url}/>
                         </IonAvatar>
                         <IonLabel>
                             <h2>{key[1].name ? key[1].name : 'Untitled'}</h2>
                             <p>{key[1].description ? key[1].description : ''}</p>
                         </IonLabel>
                     </IonItem>
-                    <IonItemOptions side="end">
-                        <IonItemOption color="medium" onClick={() => {deleteMap(key[0])}}><IonIcon icon={trash}/></IonItemOption>
-                    </IonItemOptions>
+                    
                 </IonItemSliding>
             );
           });
@@ -99,7 +130,7 @@ const MyProjects = (props) => {
                             </IonLabel>
                         </IonItem>;
     }
-   
+
    
     return (
         <IonPage>
@@ -114,6 +145,9 @@ const MyProjects = (props) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent fullscreen={true}>
+                <IonRefresher slot="fixed" onIonRefresh={doRefresh}>
+                    <IonRefresherContent></IonRefresherContent>
+                </IonRefresher>
                 <IonList>
                     <IonListHeader>
                         Lista moich projektów
@@ -157,6 +191,13 @@ const MyProjects = (props) => {
                             },{ text: 'Tak, usuń',
                                 handler: () => {handleDelete()}
                             }]}
+                />
+                <NewMap/>
+                <EditMap 
+                    map_data = {props.allMaps[selectedMapID]}
+                    map_data_id = {selectedMapID}
+                    show = {showEditor}
+                    finishEdit = {()=> finishEditName()}
                 />
             </IonContent>
         </IonPage>

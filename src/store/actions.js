@@ -7,3 +7,4 @@ export const FOLDER_DATA_GAPI = 'FOLDER_DATA_GAPI';
 export const LOGGED_METHOD = 'LOGGED_METHOD';
 
 export const USER_STATUS = 'USER_STATUS';
+export const USER_AVATAR = 'USER_AVATAR';

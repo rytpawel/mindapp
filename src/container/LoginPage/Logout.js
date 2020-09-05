@@ -1,12 +1,13 @@
 import React, {useState} from 'react';
 import {IonItem,
         IonIcon,
-        IonLabel,IonToast } from '@ionic/react';
+        IonLabel,IonToast,IonButton } from '@ionic/react';
 
 import { logOutOutline } from 'ionicons/icons';
 import {auth} from './../../firebase';
 import {connect} from 'react-redux';
 import * as actionTypes from '../../store/actions';
+import classes from './Logout.module.css';
 
 
 
@@ -39,11 +40,17 @@ const Logout = (props) => {
 
     return (
         <>
-            <IonItem lines="none"onClick={handleLogot} > 
-                <IonIcon icon={logOutOutline} slot="start" />
-                <IonLabel>
-                    <h2>Wyloguj się</h2>
-                </IonLabel>
+            <IonItem lines="none">
+                <IonButton 
+                        size="default" 
+                        padding 
+                        color="danger" 
+                        onClick={handleLogot} 
+                        expand="block" 
+                        fill="solid"
+                    > 
+                    <IonIcon icon={logOutOutline} slot="start" /> <span>Wyloguj się</span>
+                </IonButton>
             </IonItem>
             <IonToast color="danger" isOpen={showToast} message="Zostałeś wylogowany!"/>
         </>

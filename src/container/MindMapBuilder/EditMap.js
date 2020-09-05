@@ -37,7 +37,7 @@ const { Camera } = Plugins
 let mapToEdit = '';
 
 
-const NewMap = (props) => {
+const EditMap = (props) => {
     const [showModal, setShowModal] = useState(false);
     const [name, setName] = useState('');
     const [desc, setDesc] = useState('');
@@ -47,6 +47,33 @@ const NewMap = (props) => {
 
     const [showLoading, setShowLoading] = useState(false);
     const fileInputRef = useRef();
+    const [loadedData, setLoadedData] = useState(false);
+    const [forceReload, setForceReload] = useState(false);
+
+
+
+    useEffect(()=> {
+        return () => {
+            console.log("USE STATE?", props.map_data);
+            console.log(loadedData);
+            console.log(forceReload);
+            if ( props.map_data !== undefined && props.map_data.name != name && forceReload) {
+                setLoadedData(false);
+                setForceReload(false);
+            }
+            if( !loadedData && props.map_data !== undefined ) {
+                setName(props.map_data.name);
+                setDesc(props.map_data.description);
+                setPictureUrl(props.map_data.image);
+                if(props.map_data.image != '') {
+                    setHasImage(true);
+                } else {
+                    setHasImage(false);
+                }
+                setLoadedData(true);
+            }
+        }
+    });
 
     useEffect(()=>{
         return () => {
@@ -57,30 +84,23 @@ const NewMap = (props) => {
     }, [pictureUrl]);
 
 
-    const handleSaveMap = async () => {
-        let new_map = {
-            name: name,
-            description: desc,
-            map: {},
-            image: pictureUrl
-        }
-
+    const handleUpdateMap = async () => {
+    
         if( props.isLogged ) {
             const entriesRef = firestore.collection('users')
-                .doc(props.userData.user_uid)
-                .collection('maps');
-            const entryref = await entriesRef.add(new_map).then((e)=>{
-                console.log(e.id);
-                mapToEdit = e.id;
-                
-                props.handleMapToEdit();
-                setShowModal(false)
-            });
-            
-           
+						.doc(props.userData.user_uid)
+						.collection('maps').doc(props.map_data_id).update({
+                            name:name,
+                            description:desc,
+                            image:pictureUrl 
+                        });
+            setLoadedData(false);
+            setForceReload(true);
+            props.finishEdit();
         } else {
             setShowModal(false); 
-            
+            setLoadedData(false);
+            setForceReload(true);
         }
     }    
     const savePicture  = async (blobURL) => {
@@ -138,27 +158,23 @@ const NewMap = (props) => {
     return (        
                
                 <>
-                    <IonFab horizontal="end" vertical="bottom" slot="fixed">
-                        <IonFabButton color="primary" onClick={()=>setShowModal(true)}>
-                        <IonIcon icon={add} />
-                        </IonFabButton>
-                    </IonFab>
+                   
         
                     <IonModal 
-                            isOpen={showModal} 
+                            isOpen={props.show} 
                             cssClass={classes.CustomModal}
                             swipeToClose={true}
                             animated={true}
-                            onDidDismiss={() => setShowModal(false)}
+                            onDidDismiss={() =>{setLoadedData(false);  setForceReload(true); props.finishEdit()}}
                         >
                         <IonPage>
                             <IonContent>
                                 <IonToolbar>
                                     <IonTitle>
-                                        Nowy Projekt
+                                        Edytuj mapę
                                     </IonTitle>
                                     <IonButtons slot="end">
-                                        <IonButton className={classes.BtnClose}  onClick={() => handleSaveMap()}>ZAPISZ</IonButton>
+                                        <IonButton className={classes.BtnClose}  onClick={() => handleUpdateMap()}>Aktualizuj</IonButton>
                                     </IonButtons>
                                 </IonToolbar>
                                 <IonCard>
@@ -214,7 +230,8 @@ const NewMap = (props) => {
     const mapStateToProps = state => {
         return {
             isLogged: state.user.isLogged,
-            userData: state.user.userData
+            userData: state.user.userData,
+            allMaps : state.maps.mindmaps
         };
     }
     
@@ -226,4 +243,4 @@ const NewMap = (props) => {
         }
     
     }
-export default connect(mapStateToProps, mapDispatchToProps)(NewMap);
+export default connect(mapStateToProps, mapDispatchToProps)(EditMap);

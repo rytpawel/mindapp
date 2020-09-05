@@ -29,3 +29,13 @@
     max-width: 100%;
     min-width: 100%;
 }
+.Space {
+	margin-top: 30px;
+    display: block;
+    width: 100%;
+}
+.CirclePicker {
+    box-sizing: border-box;
+    padding: 4px;
+    width: 100%!important;
+}

@@ -1,7 +1,7 @@
 import React, { Component, useState, useEffect } from 'react';
 
 //Library
-import {Route, Switch} from 'react-router-dom';
+import {Route, Switch, Redirect} from 'react-router-dom';
 import {
 	IonApp,
 	IonHeader,
@@ -29,6 +29,8 @@ import * as actionTypes from './store/actions';
 import Profile from './container/LoginPage/Profil';
 
 import NewMap from './container/MindMapBuilder/NewMap';
+import RegisterPage from './container/LoginPage/Register';
+
 
 const loginStatusObject = {
     isLogged: false,
@@ -61,6 +63,11 @@ const App = (props) => {
 							user_name:profile.displayName, 
 							user_image_url:profile.photoURL
 						};
+
+						if ( loginStatusObject.userData.user_name == undefined || loginStatusObject.userData.user_name == null || loginStatusObject.userData.user_name == '' ) {
+							loginStatusObject.userData.user_name = profile.email;
+							
+						}
 						loginStatusObject.loggedMethod = profile.providerId;
 					});
 
@@ -70,6 +77,7 @@ const App = (props) => {
 					if(!props.isLogged) {
 						props.handleUserStatus();
 					}
+					console.log(loginStatusObject);
 					let updateMyMaps = {};
 					const entriesRef = firestore.collection('users').doc(loginStatusObject.userData.user_uid).collection('maps');
 					entriesRef.onSnapshot((snapshot) => {
@@ -81,6 +89,7 @@ const App = (props) => {
 							if (change.type === "removed") {
 								console.log("COS ZOSTAłO USUNIETE");
 								triggerGet(loginStatusObject.userData.user_uid);
+								
 							}
 							console.log(change.type);
 						});
@@ -94,6 +103,10 @@ const App = (props) => {
 							props.handleMindMaps();
 						})
 					});
+				} else {
+					console.log("REDIRECT TO LOGIN");
+					return <Redirect to='/login' />
+					
 				}
 			})
 			
@@ -126,17 +139,18 @@ const App = (props) => {
 		if( authState.loading ) {
 			return <IonLoading isOpen></IonLoading>
 		}
-
+		
 		return (
 			<IonApp>
 				<Menu/>
 				<IonContent>
 					<Layout>
 						<Switch>
-							<Route path="/new-map" component={NewMap} />
+							
 							<Route path="/my-projects" component={AllProjectsPage} />
 							<Route path="/profile" component={Profile} />
 							<Route path="/login" exact component={LoginPage} />
+							<Route path="/register" exact component={RegisterPage} />
 							<Route path="/" exact component={MindMapBuilder} />
 						</Switch>
 					</Layout>

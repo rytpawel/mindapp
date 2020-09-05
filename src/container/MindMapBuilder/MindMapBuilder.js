@@ -4,14 +4,13 @@ import * as go from 'gojs';
 // import DoubleTreeLayout from 'gojs/extensions/DoubleTreeLayout';
 
 import { ReactDiagram } from 'gojs-react';
-import {DoubleTreeLayout} from 'gojs/extensionsJSM/DoubleTreeLayout';
 import {connect} from 'react-redux';
 import * as actionTypes from '../../store/actions';
 
 
 import { addOutline, trash, gitMerge, grid,text,copy } from 'ionicons/icons';
 
-import Wrap from '../../components/hoc/Wrap';
+
 import Editor from '../../components/Editor/Editor';
 
 
@@ -21,29 +20,21 @@ import {
     IonPage,
     IonTitle,
     IonToolbar,
-    IonButton,
-    IonList,
-    IonItem,
-    IonInput,
-    IonLabel,
-    IonText,
-    IonToast,
-    IonLoading,
-    IonItemDivider,
-    IonItemGroup,
-    IonFab, IonFabButton, IonIcon, IonFabList,
-    IonAvatar,IonHeader,IonButtons,IonMenuButton,IonModal,IonTextarea,IonCard,IonCardContent,IonCardHeader,IonItemSliding,IonItemOptions,IonItemOption, IonListHeader
-
+	IonFab, 
+	IonFabButton, 
+	IonIcon, 
+	IonFabList,
+	IonHeader,
+	IonButtons,
+	IonMenuButton
 } from '@ionic/react';
 import { firestore } from './../../firebase';
-import { e } from 'mathjs';
-import { set } from 'lodash';
 
 // core
 let diagram = null;
 
 
-let currentSelectedNode = null;
+
 let currentSelectedID = null;
 
 
@@ -63,7 +54,7 @@ let currentMapObject = {};
 let nodeDataArray = [{ }];
 let linkDataArray =  [{ }];
 let map_title = 'Untitled';
-let new_text = '';
+
 
 const MindMapBuilder = (props) => {
 	let [currentNode, setCurrentNode] = useState({});
@@ -82,7 +73,15 @@ const MindMapBuilder = (props) => {
 	useEffect(() => {
 		console.log("useEffect => First open");
 		if( props.currentMapId === undefined || props.currentMapId == '') {
-			props.history.push('/my-projects');
+			console.log(props.userData.isLogged);
+			if( props.userData.isLogged  === undefined || !props.userData.isLogged ) {
+				console.log("Redirect to Login");
+				props.history.push('/login');
+			} else {
+				console.log("Redirect to my projects");
+				props.history.push('/my-projects');
+			}
+			
 		} else if ( props.allMaps[props.currentMapId].map.nodeDataArray === undefined || props.allMaps[props.currentMapId].map.linkDataArray === undefined) {
 			console.log("useEffect => Nowa mapa");
 			map_title =  props.allMaps[props.currentMapId].name ?  props.allMaps[props.currentMapId].name : "untitled" ;
@@ -97,10 +96,19 @@ const MindMapBuilder = (props) => {
 	useEffect(() => {
 		console.log("useEffect => sec open");
 		if( props.currentMapId === undefined || props.currentMapId == '') {
-			props.history.push('/my-projects');
+			if( props.userData.isLogged  === undefined || !props.userData.isLogged ) {
+				console.log("Redirect to Login");
+				props.history.push('/login');
+			} else {
+				console.log("Redirect to my projects");
+				props.history.push('/my-projects');
+			}
+			
 		} else if ( props.allMaps[props.currentMapId].map.nodeDataArray === undefined || props.allMaps[props.currentMapId].map.linkDataArray === undefined) {
 			console.log("useEffect => Nowa mapa");
 			map_title =  props.allMaps[props.currentMapId].name ?  props.allMaps[props.currentMapId].name : "untitled" ;
+			nodeDataArray = props.allMaps[props.currentMapId].map.nodeDataArray;
+			linkDataArray = props.allMaps[props.currentMapId].map.linkDataArray	;
 		} else {
 			console.log('useEffect => Mapa już była edytowana');
 			map_title =  props.allMaps[props.currentMapId].name ?  props.allMaps[props.currentMapId].name : "untitled" ;
@@ -415,11 +423,6 @@ const MindMapBuilder = (props) => {
 			editSelectionNode();
 		}
 	}
-
-
-	const changeTextHandler = (value) => {
-		new_text = value;
-	}
 	
 	const saveEvent = (newNodeData) => {
 		
@@ -504,7 +507,6 @@ const MindMapBuilder = (props) => {
 					</IonFab>
 					<Editor enabled={editorIsOpen}
 							selectedObject = {  currentNode }
-							changeTextHandler =  {changeTextHandler}
 							saveEvent = {saveEvent}>
 					</Editor>
 
