@@ -70,19 +70,15 @@ const NewMap = (props) => {
                 .doc(props.userData.user_uid)
                 .collection('maps');
             const entryref = await entriesRef.add(new_map).then((e)=>{
-                console.log(e.id);
                 mapToEdit = e.id;
-                
                 props.handleMapToEdit();
                 setShowModal(false)
             });
-            
-           
         } else {
             setShowModal(false); 
-            
         }
     }    
+
     const savePicture  = async (blobURL) => {
             
         if ( props.userData.user_uid !== undefined && props.userData.user_uid !== null ) {
@@ -116,7 +112,7 @@ const NewMap = (props) => {
     }
     const handleImageLoad = async () => {
             
-        if ( isPlatform('capacitor')){
+        if ( isPlatform('capacitor')) {
             try{
                 setShowLoading(true);
                 const photo = await Camera.getPhoto({

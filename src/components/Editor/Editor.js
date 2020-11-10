@@ -22,7 +22,7 @@ import {
     IonItemDivider,
     IonItemGroup,
     IonIcon,
-    IonAvatar,IonHeader,IonButtons,IonMenuButton,IonModal,IonTextarea,IonCard,IonCardContent,IonCardHeader, isPlatform
+    IonAvatar,IonHeader,IonButtons,IonMenuButton,IonModal,IonTextarea,IonCard,IonCardContent,IonCardHeader, isPlatform, IonRange
 
 } from '@ionic/react';
 import {Plugins, CameraResultType, CameraSource} from '@capacitor/core'
@@ -36,17 +36,16 @@ const Editor = (props) => {
         const fileInputRef = useRef();
         const [showLoading, setShowLoading] = useState(false);
         const [placeholder_image, setPlaceholderImage] = useState(placeholder);
-        const [newNode, setNewNode] = useState({
+        let [newNode, setNewNode] = useState({
             text : '',
             desc : '',
             source : '',
             color: '',
-            color_font : ''
+            color_font : '',
+            font: '16',
+            font_desc: '16'
         });
 
-        
-
-        
         useEffect(()=>{
             return () => {
                 if(pictureUrl.startsWith('blob:')) {
@@ -111,6 +110,20 @@ const Editor = (props) => {
             })
         }
 
+        const handleTitleSize = (data) => {
+            setNewNode({
+                ...newNode,
+                font: data 
+            })
+        }
+        const handleDescSize = (data) => {
+            setNewNode({
+                ...newNode,
+                font_desc: data 
+            })
+        }
+       
+
         const handleDesc = (desc) => {
             setNewNode({
                 ...newNode,
@@ -171,9 +184,17 @@ const Editor = (props) => {
                                         <IonLabel color="dark" position="floating">Nazwa</IonLabel>
                                         <IonTextarea value={newNode.text} placeholder="Enter name of Node..." onIonChange={(e) => handleText(e.detail.value)}></IonTextarea>
                                     </IonItem>
+                                    <IonItem>
+                                        <IonLabel  color="dark"><small>Wielkość</small></IonLabel>
+                                        <IonRange pin min={12} value={newNode.font} max={32} step={1} snaps={true} color="secondary" onIonChange={(e) => handleTitleSize(e.detail.value)} />
+                                    </IonItem>
                                     <IonItem >
                                         <IonLabel color="dark" position="floating">Krótki opis</IonLabel>
                                         <IonTextarea value={newNode.desc} placeholder="Enter more information here..." onIonChange={(e) => handleDesc(e.detail.value)}></IonTextarea>
+                                    </IonItem>
+                                    <IonItem>
+                                        <IonLabel  color="dark"><small>Wielkość</small></IonLabel>
+                                        <IonRange pin min={12} value={newNode.font_desc} max={32} step={1} snaps={true} color="secondary" onIonChange={(e) => handleDescSize(e.detail.value)} />
                                     </IonItem>
                                     <IonItem lines="none">
                                         <IonLabel  color="dark" >Kolor węzła</IonLabel>

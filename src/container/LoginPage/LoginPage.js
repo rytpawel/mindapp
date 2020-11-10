@@ -8,15 +8,13 @@ import {
     IonItem,
     IonInput,
     IonLabel,
-    IonText,
     IonToast,
     IonLoading,
     IonItemDivider,
     IonItemGroup,
     IonIcon,IonHeader,
     IonButtons,
-    IonMenuButton,
-    IonListHeader
+    IonMenuButton
 } from '@ionic/react';
 import { logoGoogle, logoFacebook } from 'ionicons/icons';
 
@@ -27,10 +25,10 @@ import {connect} from 'react-redux';
 import * as actionTypes from '../../store/actions';
 
 
-import { firebase, firestore,storage  } from './../../firebase';
+import { firebase, firestore, storage  } from './../../firebase';
 
 import {cfaSignIn} from 'capacitor-firebase-auth';
-import { Redirect } from 'react-router';
+
 
 import classes from './LoginModule.module.css';
 
@@ -77,34 +75,31 @@ const LoginPage = (props) => {
             setError(false);
         }, 3000);
     }
+
     const handleLoginGoogle = () => {
         try {
             cfaSignIn('google.com').subscribe(
                 (user) => {
                     user.providerData.forEach(function (profile) {
-						console.log(" Sign-in provider: " + profile.providerId);
-						console.log(" Name: " + profile.displayName);
-						console.log(" Email: " + profile.email);
-						console.log(" Photo URL: " + profile.photoURL);
 						loginStatusObject.userData = { 
 							user_uid : profile.uid,
-							user_email:profile.email, 
-							user_name:profile.displayName, 
-							user_image_url:profile.photoURL
+							user_email: profile.email, 
+							user_name: profile.displayName, 
+							user_image_url: profile.photoURL
 						};
 						loginStatusObject.loggedMethod = profile.providerId;
                     });
                     loginStatusObject.isLogged = true;
-                    //showSuccessToast();
+
                     handleCreateAccount();
-                   
+                    showSuccessToast();
                 }
             )
         } catch (e) {
             showErrorMessage(e);
         }
-        
     }
+
     const handleLoginFacebook = () => {
         try {
             cfaSignIn('facebook.com').subscribe(
@@ -123,8 +118,7 @@ const LoginPage = (props) => {
 						loginStatusObject.loggedMethod = profile.providerId;
                     });
                     loginStatusObject.isLogged = true;
-                    console.log(loginStatusObject);
-                    //showSuccessToast();
+                    showSuccessToast();
                     handleCreateAccount();
                     
                 }

@@ -19,6 +19,14 @@ const reducer = (state = initialState, action) => {
                 ...state,
                 currentmapid : [action.value]
             }
+
+        case actionTypes.CLEAR_DATA:
+            return {
+                ...state,
+                mindmaps : [],
+                currentmap: {},
+                folderdata : {},
+            }
     }
     return state;
 

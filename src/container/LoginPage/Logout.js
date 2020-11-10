@@ -21,6 +21,7 @@ const Logout = (props) => {
     const [showToast, setShowToast] = useState("");
     const handleLogot = () => {
         auth.signOut();
+        props.clearData();
         showToastHandle();
     } 
     const showToastHandle = () => {
@@ -70,7 +71,8 @@ const mapStateToProps = state => {
 // rzutowanie funkcji do odpowiedniego dispatcha
 const mapDispatchToProps  = dispatch => {
     return {
-        handleUserStatus : () => dispatch({type:actionTypes.USER_STATUS, value: loginStatusObject})
+        handleUserStatus : () => dispatch({type:actionTypes.USER_STATUS, value: loginStatusObject}),
+        clearData : () => dispatch({type:actionTypes.CLEAR_DATA, value: true})
     }
 
 }
